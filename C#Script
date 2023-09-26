@@ -1,4 +1,4 @@
-  private void RunScript(Curve road, double pathdivisionratio, Mesh mesh, double roadwidth, double slopewidth, bool fixmesh, ref object ResultOriginalmMeshTopology, ref object ResultRoadVerticesTopology, ref object RoadMesh, ref object RoadCentercrv, ref object SlopeMesh, ref object debug)
+ private void RunScript(Curve road, double pathdivisionratio, Mesh mesh, double roadwidth, double slopewidth, bool fixmesh, ref object ResultOriginalmMeshTopology, ref object ResultRoadVerticesTopology, ref object RoadMesh, ref object RoadCentercrv, ref object SlopeMesh, ref object debug)
   {
     Rhino.Geometry.Collections.MeshVertexList meshvertex = mesh.Vertices;
     Rhino.Geometry.Collections.MeshFaceList meshface = mesh.Faces;
@@ -54,8 +54,7 @@
             cullfaceindex.Add(tempindex[j]);
           }
         }
-        //get cull mesh end
-        //get ori mesh topology only move vertex z value out to ResultOriginalmMeshTopology
+
 
         Orimesh.Vertices.Add(new Point3d(meshvertex[i].X, meshvertex[i].Y, ptonpath.Z));
       }
@@ -110,15 +109,7 @@
 
     ResultOriginalmMeshTopology = Orimesh;
 
-    //    bool[] cullmeshvertexstatus = cullmesh.GetNakedEdgePointStatus();
-    //    List<Point3d> nakedpt = new List <Point3d>();
-    //    for (int i = 0; i < cullmeshvertexstatus.Length; i++)
-    //    {
-    //      if (cullmeshvertexstatus[i])
-    //      {
-    //        nakedpt.Add(cullmesh.Vertices[i]);
-    //      }
-    //    }
+
     //get cullmehs boundary pt
     Rhino.Geometry.Polyline[] cullmeshedgepolyline = cullmesh.GetNakedEdges();
     //offset path
@@ -150,11 +141,8 @@
       {
         rebuiltcrvdivisionpt.Add(crv3[i].PointAt(rebuiltcrvdivision[j]));
         rebuiltcrvdivisionpt2df.Add(new Point3f((float) crv3[i].PointAt(rebuiltcrvdivision[j]).X, (float) crv3[i].PointAt(rebuiltcrvdivision[j]).Y, 0));
-
       }
-
     }
-
 
     //make delaunay road mesh
     List<Point3d> delaunaypt = new List<Point3d>();
@@ -162,7 +150,6 @@
     for (int i = 0; i < cullmeshedgepolyline.Length; i++)
     {
       var temp = cullmeshedgepolyline[i].ToArray();
-
       for (int j = 0; j < temp.Length; j++)
       {
         delaunaypt.Add(temp[j]);
@@ -172,8 +159,6 @@
       {
         delaunaypt.Add(rebuiltcrvdivisionpt[k]);
       }
-
-      //
     }
     //make delaunay
     Rhino.Geometry.Mesh delMesh = new Mesh();
@@ -192,38 +177,8 @@
     faces = Grasshopper.Kernel.Geometry.Delaunay.Solver.Solve_Faces(nodes, 1);
     delMesh = Grasshopper.Kernel.Geometry.Delaunay.Solver.Solve_Mesh(nodes, 1, ref faces);
 
-    //Rhino.Geometry.Collections.MeshFaceList delMeshfaces= delMesh.Faces;
-    //Rhino.Geometry.Collections.MeshFaceList facesculled = delMeshculled.Faces;
-    //cull delaunay edge faces
-    //    List<int> delaunayedgefaceindex = new List<int>();
-    //    for (int i = 0; i < delaunaypt.Count; i++)
-    //    {
-    //      int[] tempindex = delMesh.Vertices.GetVertexFaces(i);
-    //      for (int j = 0; j < tempindex.Length; j++)
-    //      {
-    //        if (!delaunayedgefaceindex.Contains(tempindex[j]))
-    //        {
-    //          delaunayedgefaceindex.Add(tempindex[j]);
-    //        }
-    //      }
-    //
-    //    }
-
-    //if( cullmeshedgepolyline[0].IsClosed)
-    //{
-
-    //    List<Rhino.Geometry.Polyline> projectedcullmeshedgepolyline = new List<Rhino.Geometry.Polyline>();
-    //    for (int i = 0; i < cullmeshedgepolyline.Length; i++)
-    //    {
-    //      Rhino.Geometry.Polyline projectedcullmeshedgepolyline = cullmeshedgepolyline[i];
-    //      projectedcullmeshedgepolyline.SetAllZ(i);
-    //    }
-    //
-    //
-    //
-    //
     double tolerance = 0.001d;
-    //      var projectedcullmeshedge = Rhino.Geometry.Curve.CreateControlPointCurve(projectedcullmeshedgepolyline.ToArray(), 1);
+
 
     //trim road delaunay mesh faces
     for (int i = 0; i < delMesh.Faces.Count; i++)
@@ -257,28 +212,18 @@
         var prj_points1 = Rhino.Geometry.Intersect.Intersection.ProjectPointsToMeshes(new[] {remainmesh}, new[] {testppt[1]}, Vector3d.ZAxis, tolerance / 10);
         var prj_points2 = Rhino.Geometry.Intersect.Intersection.ProjectPointsToMeshes(new[] {remainmesh}, new[] {testppt[2]}, Vector3d.ZAxis, tolerance / 10);
 
-        //debug = prj_points0;
+
         bool ispt0inside = prj_points0.Length == 0;
         bool ispt1inside = prj_points1.Length == 0;
         bool ispt2inside = prj_points2.Length == 0;
 
-        //        var ispt0inside = projectedcullmeshedge.Contains(testppt[0], Plane.WorldXY, tolerance);
-        //        var ispt1inside = projectedcullmeshedge.Contains(testppt[1], Plane.WorldXY, tolerance);
-        //        var ispt2inside = projectedcullmeshedge.Contains(testppt[2], Plane.WorldXY, tolerance);
-
-        //three sample pts within face && closest at best to three verteices
-        //if ((int) ispt0inside == 1 && (int) ispt1inside == 1 && (int) ispt2inside == 1)
         if(ispt0inside && ispt1inside && ispt2inside)
         {
           delMeshculled.Faces.AddFace(delMesh.Faces[i]);
-
         }
-
       }
-
-
     }
-    //}
+    
 
     //output
     delMeshculled.FaceNormals.ComputeFaceNormals();
@@ -294,39 +239,23 @@
 
     RoadMesh = roadmesh;
 
-
-
     Rhino.Geometry.Mesh finaloutputmesh = new Rhino.Geometry.Mesh();
     finaloutputmesh.Append(remainmesh);
     finaloutputmesh.Append(delMeshculled);
     finaloutputmesh.Append(roadmesh);
 
-    //debug = remainmesh;
-
     if (fixmesh)//fill hole
     {
 
-      //roadmesh.ExtractNonManifoldEdges(true);
-      //roadmesh.CollapseFacesByArea(0.01d,0d);
+      roadmesh.ExtractNonManifoldEdges(true);
+      roadmesh.CollapseFacesByArea(0.01d,0d);
       roadmesh.Faces.CullDegenerateFaces();
 
       finaloutputmesh.Faces.CullDegenerateFaces();
-      Rhino.Geometry.Polyline[] edgepolylines = finaloutputmesh.GetNakedEdges();
-
-      for (int i = 0; i < edgepolylines.Length; i++)
-      {
-
-        if(edgepolylines[i].ToArray().Length < 6)
-        {
-          finaloutputmesh.Append(Mesh.CreateFromClosedPolyline(edgepolylines[i]));
-
-        }
-      }
 
     }
     finaloutputmesh.RebuildNormals();
     ResultRoadVerticesTopology = finaloutputmesh;
-
 
 
 
